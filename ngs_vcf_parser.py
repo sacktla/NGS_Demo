@@ -28,6 +28,15 @@ class NGS_Parser(object):
             }
         )
 
+    def to_dict(self):
+        return {
+            "format"    : self.format,
+            "info"      : self.info,
+            "filter"    : self.filter,
+            "reference" : self.reference,
+            "data"      : self.data
+        }
+        
     def extract_vcf(self, file_name, decode_type):
         with gzip.open(file_name) as gz_file:
             content = gz_file.read().splitlines()
@@ -68,7 +77,8 @@ class NGS_Parser(object):
         elif doc_type == "filter":
             use_dict = self.filter
         else:
-            print("Doc Type {} has not been considered for parsing".format(doc_type))
+            print("Doc Type {} has not been considered for parsing"\
+                    .format(doc_type))
             return
 
         key = None
