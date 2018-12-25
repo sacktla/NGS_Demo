@@ -43,7 +43,7 @@ class NGS_Parser(object):
     """
     def to_dict(self):
         return {
-                    ntpath.basename(self.file_name) :
+                    ntpath.basename(self.file_name).replace('.','_') :
                     {
                         "reference"   : self.reference,
                         "assembly"    : self.assembly,
