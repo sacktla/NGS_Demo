@@ -2,106 +2,159 @@ import gzip
 import json
 import ntpath
 
-
+"""
+Class to convert VCF files into JSON file.
+"""
 class NGS_Parser(object):
+
+    """
+    Initializer
+    """
     def __init__(self, file_name, decode_type='UTF-8'):
-        self.content   = None
-        self.file_name = file_name
-        self.format    = {}
-        self.info      = {}
-        self.filter    = {}
-        self.reference = None
-        self.data      = []
+        self.file_name   = file_name
+        self.reference   = None
+        self.assembly    = None
+        self.pedigree_DB = None
+        self.file_format = None
+        self.file_date   = None
+        self.source      = None
+        self.phasing     = None
+        self.data        = []
+        self.format      = []
+        self.info        = []
+        self.filter      = []
+        self.alt         = []
+        self.contig      = []
+        self.sample      = []
+        self.pedigree    = []
 
         self.extract_vcf(file_name, decode_type)
 
+    """
+    Returns extracted data as a JSON object.
+    """
     def to_json(self):
         return json.dumps(
-            {
-                ntpath.basename(self.file_name) : {
-                    "format"    : self.format,
-                    "info"      : self.info,
-                    "filter"    : self.filter,
-                    "reference" : self.reference,
-                    "data"      : self.data
-                }
-            }
+            self.to_dict()
         )
 
+    """
+    Returns extracted data as a dictionary
+    """
     def to_dict(self):
         return {
-            "format"    : self.format,
-            "info"      : self.info,
-            "filter"    : self.filter,
-            "reference" : self.reference,
-            "data"      : self.data
-        }
-        
+                    ntpath.basename(self.file_name) :
+                    {
+                        "reference"   : self.reference,
+                        "assembly"    : self.assembly,
+                        "pedigree_DB" : self.pedigree_DB,
+                        "file_format" : self.file_format,
+                        "file_date"   : self.file_date,
+                        "source"      : self.source,
+                        "phasing"     : self.phasing,
+                        "format"      : self.format,
+                        "info"        : self.info,
+                        "filter"      : self.filter,
+                        "alt"         : self.alt,
+                        "contig"      : self.contig,
+                        "sample"      : self.sample,
+                        "pedigree"    : self.pedigree,
+                        "data"        : self.data,
+                    }
+            }
+
+    """
+    Method to initiate extraction of VCF file
+    """
     def extract_vcf(self, file_name, decode_type):
         with gzip.open(file_name) as gz_file:
             content = gz_file.read().splitlines()
-
-            extracted_reference = ''
-            extracted_format = {}
-            header = False
 
             for i in range(len(content)):
                 content[i] = content[i].decode(decode_type)
 
                 if content[i].startswith("##INFO"):
-                    self.extract_helper(content[i], doc_type="info")
+                    self.extract_helper(content[i].replace("##INFO=", ""), doc_type="info")
 
                 elif content[i].startswith("##reference"):
                     self.reference = content[i].split('=')[1]
 
+                elif content[i].startswith("##fileformat"):
+                    self.file_format = content[i].split('=')[1]
+
+                elif content[i].startswith("##fileDate"):
+                    self.file_date = content[i].split('=')[1]
+
+                elif content[i].startswith("##source"):
+                    self.source = content[i].split('=')[1]
+
+                elif content[i].startswith("##phasing"):
+                    self.phasing = content[i].split('=')[1]
+
                 elif content[i].startswith("##FORMAT"):
-                    self.extract_helper(content[i], doc_type="format")
+                    self.extract_helper(content[i].replace("##FORMAT=", ""), doc_type="format")
 
                 elif content[i].startswith("##FILTER"):
-                    self.extract_helper(content[i], doc_type="filter")
+                    self.extract_helper(content[i].replace("##FILTER=", ""), doc_type="filter")
 
-                elif content[i].startswith('#')\
-                 and not content[i].startswith('##'):
-                    header  = True
+                elif content[i].startswith("##ALT"):
+                    self.extract_helper(content[i].replace("##ALT=", ""), doc_type="alt")
 
-                elif not content[i].startswith("#") and header:
+                elif content[i].startswith("##assembly"):
+                    self.assembly = content[i].split('=')[1]
+
+                elif content[i].startswith("##contig"):
+                    self.extract_helper(content[i].replace("##contig=", ""), doc_type="contig")
+
+                elif content[i].startswith("##SAMPLE"):
+                    self.extract_helper(content[i].replace("##SAMPLE=", ""), doc_type="sample")
+
+                elif content[i].startswith("##PEDIGREE"):
+                    self.extract_helper(content[i].replace("##PEDIGREE=", ""), doc_type="pedigree")
+
+                elif content[i].startswith("##pedigreeDB"):
+                    self.pedigree_DB = content[i].split("=")[1].replace('<','')\
+                        .replace('>','')
+
+                elif not content[i].startswith(\
+                "#CHROM"):
                     self.extract_data(content[i])
 
-            return content if len(content) > 0 else None
-
+    """
+    Method to extract information of VCF file.
+    """
     def extract_helper(self, line, doc_type):
         if doc_type == "info":
-            use_dict = self.info
+            use_list = self.info
         elif doc_type == "format":
-            use_dict = self.format
+            use_list = self.format
         elif doc_type == "filter":
-            use_dict = self.filter
-        else:
-            print("Doc Type {} has not been considered for parsing"\
-                    .format(doc_type))
-            return
+            use_list = self.filter
+        elif doc_type == "alt":
+            use_list = self.alt
+        elif doc_type == "contig":
+            use_list = self.contig
+        elif doc_type == "sample":
+            use_list = self.sample
+        elif doc_type == "pedigree":
+            use_list = self.pedigree
 
-        key = None
-        info_line = line.split("<")[1]
-        info_line = info_line.replace('>', '')
+        info_line      = line.replace('<','')
+        info_line      = info_line.replace('>', '')
+        temp_info_dict = {}
 
-        for param in info_line.split(','):
-            param_list = param.split('=')
-            param_name = param_list[0]
+        for param in NGS_Parser.separate_parameters(info_line):
+            split_param                = param.split('=')
+            param_name                 = split_param[0]
+            param_value                = split_param[1].replace('"', '')
+            temp_info_dict[param_name] = param_value
 
-            if param_name == 'ID':
-                key = param_list[1]
-                use_dict[key] = {}
+        use_list.append(temp_info_dict)
 
-            if key:
-                if param_name == "Number":
-                    use_dict[key]["Number"] = param_list[1]
-                elif param_name == "Type":
-                    use_dict[key]["Type"] = param_list[1]
-                elif param_name == "Description":
-                    use_dict[key]["Description"] = param_list[1]
-
-    #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+    """
+    Method to extract data based on headers:
+    CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+    """
     def extract_data(self, line):
         split_line = line.split('\t')
         chromosome = split_line[0]
@@ -136,3 +189,20 @@ class NGS_Parser(object):
                 'info': info_dict,
             }
         )
+
+    """
+    Class Method to separate the information parameters to key=value elements
+    separated by a comma. It allows us to escape the commas inside quotations
+    Python csv package does not allow you to do this if the character "="
+    is found.
+    """
+    @classmethod
+    def separate_parameters(cls, string):
+        new_list = []
+        for i, b in enumerate(string.split(',')) :
+            if b.find('=') != -1 :
+                new_list.append(b)
+            else :
+                new_list[len(new_list)-1] += ',' + b
+
+        return new_list

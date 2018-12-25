@@ -8,7 +8,6 @@ TEST_DEMOGRAPHICS = '/Users/jesuszaragoza/Desktop/NGS_Parser/NGS_Demo/Test_Data/
 VCF_LOCATION = '/Users/jesuszaragoza/Desktop/NGS_Parser/NGS_Demo/Test_Data'
 def main():
     demographics = PDF_Demographics_Parser(TEST_DEMOGRAPHICS).demographics
-    # print(demographics[0].keys())
     for demo in demographics:
         vcf_file_name            = demo['vcf_file_name']
         vcf_file_path            = path.join(VCF_LOCATION, vcf_file_name)
@@ -17,7 +16,6 @@ def main():
 
     requests.post(url='http://127.0.0.1:5000/ngs_data/',\
                     data=json.dumps(demographics), headers={'Content-Type':'application/json'})
-
 
 if __name__ == '__main__':
     main()

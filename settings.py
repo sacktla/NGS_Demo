@@ -9,7 +9,7 @@ ngs_data_schema = {
     'first_name':{'type':'string'},
     'last_name':{'type':'string'},
     'vcf_file_name':{'type':'string'},
-    'birth_date':{'type':'string'},#NEED TO WORK ON GETTING THE DATA AS A DATE
+    'birth_date':{'type':'string'},
     'vcf_file_content':{'type':'dict'},
 }
 
