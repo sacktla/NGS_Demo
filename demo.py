@@ -5,7 +5,7 @@ import json
 import requests
 """
 This script will just populate the ngs_data endpoint so that you can access
-it via Postman. 
+it via Postman.
 """
 #update TEST_DEMOGRAPHICS to point to the PDF file with the demographics and
 #VCF file Name
