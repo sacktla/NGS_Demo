@@ -23,5 +23,10 @@ Instructions to run the demo
 and store them in the Mongo DB.
 Make sure you update locations in demo.py to where the Test_Data folder is found.
 8) Use postman to get all the parsed VCF files in a JSON format.
-  http://127.0.0.1:5000/ngs_data/ You can access individual records by grabbing the fields
+  http://0.0.0.0:5000/ngs_data/ You can access individual records by grabbing the fields
   of _items["_id"]. You can delete individual records or all of them.
+
+Instructions using docker image:
+1) Pull docker image from Docker Hub: sacktla/ngs_demo
+  docker pull sacktla/ngs_demo:
+2)
