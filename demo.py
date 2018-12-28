@@ -3,15 +3,16 @@ from pdf_demographics_parser import PDF_Demographics_Parser
 from os import path
 import json
 import requests
+import os
 """
 This script will just populate the ngs_data endpoint so that you can access
 it via Postman.
 """
 #update TEST_DEMOGRAPHICS to point to the PDF file with the demographics and
 #VCF file Name
-TEST_DEMOGRAPHICS = '/Users/jesuszaragoza/Desktop/NGS_Parser/NGS_Demo/Test_Data/test_demographics.pdf'
+TEST_DEMOGRAPHICS = os.path.join(os.getcwd(),'Test_Data/test_demographics.pdf')
 #Update VCF_LOCATION to the Test_Data Folder location
-VCF_LOCATION = '/Users/jesuszaragoza/Desktop/NGS_Parser/NGS_Demo/Test_Data'
+VCF_LOCATION = os.path.join(os.getcwd(),'Test_Data')
 def main():
     demographics = PDF_Demographics_Parser(TEST_DEMOGRAPHICS).demographics
     for demo in demographics:
@@ -20,7 +21,7 @@ def main():
         vcf_file_content         = NGS_Parser(vcf_file_path)
         demo['vcf_file_content'] = vcf_file_content.to_dict()
 
-    requests.post(url='http://127.0.0.1:5000/ngs_data/',\
+    requests.post(url='http://0.0.0.0:5000/ngs_data',\
                     data=json.dumps(demographics), headers={'Content-Type':'application/json'})
 
 if __name__ == '__main__':
