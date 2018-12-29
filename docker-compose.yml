@@ -11,3 +11,5 @@ services:
 
   mongo:
     image: "sacktla/mongo_ngs:ngs_data"
+    ports:
+      - "27017:27017"
