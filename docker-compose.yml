@@ -10,4 +10,4 @@ services:
       - mongo
 
   mongo:
-    image: "mongo"
+    image: "sacktla/mongo_ngs:ngs_data"
