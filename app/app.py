@@ -23,7 +23,7 @@ def populate_db():
             demo['vcf_file_content'] = vcf_file_content.to_dict()
 
 
-        status = requests.post(url='http://0.0.0.0:5000/ngs_data',\
+        status = requests.post(url='http://mongo:5000/ngs_data',\
                         data=json.dumps(demographics), headers={'Content-Type':'application/json'})
         message = json.dumps({"message": "Database populated"})
         return app.response_class(message, content_type='application/json', status=201)
@@ -32,4 +32,4 @@ def populate_db():
     return app.response_class(message, content_type="application/json", status=405)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0")
+    app.run(host="mongo")
