@@ -1,10 +1,15 @@
-version: '2'
+version: '3.3'
+volumes:
+  mongodata:
 services:
   mongo:
     container_name: "mongo"
     image: mongo:3.4
-    ports:
-      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    expose:
+      - 27017
+
   web:
     build: .
     ports:
