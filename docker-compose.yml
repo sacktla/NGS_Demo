@@ -1,5 +1,10 @@
 version: '2'
 services:
+  mongo:
+    container_name: "mongo"
+    image: "mongo"
+    ports:
+      - "27017:27017"
   web:
     build: .
     ports:
@@ -8,8 +13,3 @@ services:
       - .:/usr/src/app
     links:
       - mongo
-
-  mongo:
-    image: "mongo"
-    ports:
-      - "27017:27017"

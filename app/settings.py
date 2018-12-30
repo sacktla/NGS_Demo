@@ -1,7 +1,7 @@
 #Connection to Mongo
 MONGO_HOST="mongo"
-MONGO_PORT=27017
-MONGO_DBNAME = 'ngs_data'
+# MONGO_PORT=27017
+# MONGO_DBNAME = 'ngs_data'
 
 #Allow resources to have write endpoint
 RESOURCE_METHODS = ['GET', 'POST', 'DELETE']
