@@ -1,5 +1,7 @@
 #Connection to Mongo
+import os
 MONGO_HOST="mongo"
+print(os.environ)
 # MONGO_PORT=27017
 # MONGO_DBNAME = 'ngs_data'
 

@@ -8,6 +8,7 @@ from flask import request
 import os
 
 app = Eve()
+print(os.environ)
 TEST_DEMOGRAPHICS = os.path.join(os.getcwd(), 'app/test_demographics.txt')
 #Update VCF_LOCATION to the Test_Data Folder location
 VCF_LOCATION = os.path.join(os.getcwd(),'app/Test_Data')
