@@ -13,13 +13,17 @@ demo/demo.py. This Mongo DB was running in the docker image Mongo (https://hub.d
 Endpoints and methods:
 
 GET http://0.0.0.0:5000/ngs_data - Returns all of the NGS_Data parsed found in DB.
+
 POST http://0.0.0.0:5000/ngs_data/populate_db/<pdf_file_name> -
   - Must have a pdf file to parse in the /app folder
   - Populates the ngs_data file with the VCF files listed in the pdf file. See
     documentation in /app/pdf_demographics_parser.py
+    
 GET http://0.0.0.0:5000/ngs_data/<_id> - Return NGS Data from the item _id field. You can get this id
                                          by running GET http://0.0.0.0:5000/ngs_data
+                                         
 DELETE http://0.0.0.0:5000/ngs_data - Deletes all the data found in the ngs_data document.
+
 DELETE http://0.0.0.0:5000/ngs_data/<_id> - Deletes NGS Data from the item _id field.
 
 How to run the demo and API
