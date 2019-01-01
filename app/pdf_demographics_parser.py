@@ -4,7 +4,8 @@ import datetime
 import json
 import ntpath
 """
-Class used to extract data from PDF files simulating a manifest from a client
+Class takes text file extracted using pdftotext (see app/app.py for info) from
+PDF files simulating a manifest from a client.
 See Test_Data/test_demographics.pdf for example.
 # NOTE: This is for demo only, not useful for production as it is very specific
 to pdf file created for the purposes of this demo.
@@ -21,7 +22,7 @@ class PDF_Demographics_Parser(object):
                                 self.text_corps)
 
     """
-    Class method that extracts the text from a pdf file and returns
+    Class method that returns the text from a text file and returns
     it as a string.
     """
     @classmethod
