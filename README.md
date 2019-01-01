@@ -11,6 +11,7 @@ VCF files were collected from NCBI, parsed and populated into a Mongo DB by the 
 demo/demo.py. This Mongo DB was running in the docker image Mongo (https://hub.docker.com/_/mongo/).
 
 Endpoints and methods:
+
 GET http://0.0.0.0:5000/ngs_data - Returns all of the NGS_Data parsed found in DB.
 POST http://0.0.0.0:5000/ngs_data/populate_db/<pdf_file_name> -
   - Must have a pdf file to parse in the /app folder
