@@ -19,10 +19,10 @@ class NGS_Parser(object):
         self.file_date   = None
         self.source      = None
         self.phasing     = None
-        self.data        = []
-        self.format      = []
-        self.info        = []
-        self.filter      = []
+        self.filtered_data = {}
+        self.non_filtered_data = {}
+        self.info        = {}
+        self.filter      = {}
         self.alt         = []
         self.contig      = []
         self.sample      = []
@@ -43,25 +43,22 @@ class NGS_Parser(object):
     """
     def to_dict(self):
         return {
-                    ntpath.basename(self.file_name).replace('.','_') :
-                    {
-                        "reference"   : self.reference,
-                        "assembly"    : self.assembly,
-                        "pedigree_DB" : self.pedigree_DB,
-                        "file_format" : self.file_format,
-                        "file_date"   : self.file_date,
-                        "source"      : self.source,
-                        "phasing"     : self.phasing,
-                        "format"      : self.format,
-                        "info"        : self.info,
-                        "filter"      : self.filter,
-                        "alt"         : self.alt,
-                        "contig"      : self.contig,
-                        "sample"      : self.sample,
-                        "pedigree"    : self.pedigree,
-                        "data"        : self.data,
-                    }
-            }
+                    "reference"   : self.reference,
+                    "assembly"    : self.assembly,
+                    "pedigree_DB" : self.pedigree_DB,
+                    "file_format"       : self.file_format,
+                    "file_date"         : self.file_date,
+                    "source"            : self.source,
+                    "phasing"           : self.phasing,
+                    "alt"               : self.alt,
+                    "contig"            : self.contig,
+                    "sample"            : self.sample,
+                    "pedigree"          : self.pedigree,
+                    "filter"            : self.filter,
+                    "info"              : self.info,
+                    "filtered_data"     : self.filtered_data,
+                    "non_filtered_data" : self.non_filtered_data,
+                }
 
     """
     Method to initiate extraction of VCF file
@@ -74,7 +71,7 @@ class NGS_Parser(object):
                 content[i] = content[i].decode(decode_type)
 
                 if content[i].startswith("##INFO"):
-                    self.extract_helper(content[i].replace("##INFO=", ""), doc_type="info")
+                    self.parse_info(content[i])
 
                 elif content[i].startswith("##reference"):
                     self.reference = content[i].split('=')[1]
@@ -91,11 +88,8 @@ class NGS_Parser(object):
                 elif content[i].startswith("##phasing"):
                     self.phasing = content[i].split('=')[1]
 
-                elif content[i].startswith("##FORMAT"):
-                    self.extract_helper(content[i].replace("##FORMAT=", ""), doc_type="format")
-
                 elif content[i].startswith("##FILTER"):
-                    self.extract_helper(content[i].replace("##FILTER=", ""), doc_type="filter")
+                    self.parse_filter(content[i])
 
                 elif content[i].startswith("##ALT"):
                     self.extract_helper(content[i].replace("##ALT=", ""), doc_type="alt")
@@ -117,8 +111,59 @@ class NGS_Parser(object):
                         .replace('>','')
 
                 elif not content[i].startswith(\
-                "#CHROM"):
+                "#CHROM") and not content[i].startswith("##FORMAT"):
                     self.extract_data(content[i])
+
+    """
+    Method to extract info field
+    """
+    def parse_info(self, line_content):
+
+        clean_content = line_content.replace('##INFO=<', '')
+        clean_content = clean_content.replace('>', '')
+        split_content = NGS_Parser.separate_parameters(clean_content)
+        info_key      = None
+        idx           = 0
+
+        while not info_key and idx < len(split_content):
+            key, value = split_content[idx].split("=")
+
+            if key == "ID":
+                info_key = value
+
+            idx += 1
+
+        if info_key:
+            self.info[info_key] = {}
+
+            for field in split_content:
+                key, value = field.split('=')
+                self.info[info_key][key] = value
+
+    """
+    Method to extract filter field
+    """
+    def parse_filter(self, line_content):
+        clean_content = line_content.replace("##FILTER=","")
+        clean_content = clean_content.replace(">", "")
+        split_content = NGS_Parser.separate_parameters(clean_content)
+        filter_key    = None
+        idx           = 0
+
+        while not filter_key and idx < len(split_content):
+            key, value = split_content[idx].split('=')
+
+            if key == 'ID':
+                filter_key = value
+
+            idx += 1
+
+        if filter_key:
+            self.filter[filter_key] = {}
+
+            for field in split_content:
+                key, value = field.split('=')
+                self.filter[info_key][key] = value
 
     """
     Method to extract information of VCF file.
@@ -168,27 +213,65 @@ class NGS_Parser(object):
         info_dict  = {}
 
         for pair in info:
-            split_pair     = pair.split('=')
-            key            = split_pair[0]
-            if len(split_pair) < 2:
-                value = ''
+            split_pair = pair.split('=')
+            key        = split_pair[0]
+
+            if len(split_pair) == 1:
+                info_dict[key] = None
             else:
-                value = split_pair[1]
+                info_dict[key] = split_pair[1]
 
-            info_dict[key] = value
+        if filter == "PASS":
+            if id == '.':
+                if not 'unknown' in self.non_filtered_data:
+                    self.non_filtered_data['unknown'] = []
 
-        self.data.append(
-            {
-                'chromosome':chromosome,
-                'position':position,
-                'id':id,
-                'reference':reference,
-                'alternate':alternate,
-                'quality':quality,
-                'filter':filter,
-                'info': info_dict,
-            }
-        )
+                self.non_filtered_data['unknown'].append(
+                    {
+                        'chromosome' : chromosome,
+                        'position' : position,
+                        'reference': reference,
+                        'alternate' : alternate,
+                        'quality' : quality,
+                        'info' : info_dict,
+                    }
+                )
+            else:
+                self.non_filtered_data[id] = {
+                    'chromosome' : chromosome,
+                    'position' : position,
+                    'reference': reference,
+                    'alternate' : alternate,
+                    'quality' : quality,
+                    'info' : info_dict,
+                }
+        else:
+            if id == '.':
+
+                if not 'unknown' in self.non_filtered_data:
+                    self.non_filtered_data['unknown'] = []
+
+                self.filtered_data['unknown'].append(
+                    {
+                        'chromosome' : chromosome,
+                        'position' : position,
+                        'reference' : reference,
+                        'alternate' : alternate,
+                        'quality' : quality,
+                        'info' : info_dict,
+                        'filter' : filter.split(';')
+                    }
+                )
+            else:
+                self.filtered_data[id] = {
+                    'chromosome' : chromosome,
+                    'position' : position,
+                    'reference' : reference,
+                    'alternate' : alternate,
+                    'quality' : quality,
+                    'info' : info_dict,
+                    'filter' : filter.split(';')
+                }
 
     """
     Class Method to separate the information parameters to key=value elements
